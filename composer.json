@@ -3,8 +3,7 @@
   "version": "0.1.dev",
 
   "autoload": {
-    "psr-0": {"Rex": "" }
-    "psr-0": {"Rex\Data": "" }
+    "psr-0": {"Rex": "", "Rex\Data": ""  }
   }
 
 }
