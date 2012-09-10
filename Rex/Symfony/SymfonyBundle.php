@@ -25,6 +25,8 @@ class SymfonyBundle extends Bundle {
       $db = new TransactionPDO("mysql:dbname=$database;host=$server", $username, $password, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8" ));
 
       Database::setDB($db);
+
+      Rex\Log::setLogger($this->get("logger"));
     }
 }
 

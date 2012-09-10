@@ -2,6 +2,8 @@
 
 namespace Rex\Data;
 
+use Rex\Log;
+
 class TransactionPDO extends \PDO {
   // Database drivers that support SAVEPOINTs.
   protected static $savepointTransactions = array("pgsql", "mysql");
@@ -15,7 +17,7 @@ class TransactionPDO extends \PDO {
   }
 
   function log($statement) {
-    \Log::debug(preg_replace('/(?>\r\n|\n|\r)+/m', ' ', $statement)."\n\r");
+    Log::debug(preg_replace('/(?>\r\n|\n|\r)+/m', ' ', $statement)."\n\r");
   }
   
   function exec($statement) {
@@ -46,7 +48,7 @@ class TransactionPDO extends \PDO {
     try {
       $ret = call_user_func($call);
     } catch(\Exception $e) {
-      \Log::debug($e);
+      Log::debug($e);
       $this->rollBack();
       throw $e;
     }
@@ -61,11 +63,7 @@ class TransactionPDO extends \PDO {
   }
 
   public function beginTransaction() {
-    $trace = debug_backtrace();
-    \Log::debug($trace[1]["file"].":L".$trace[1]["line"], true);
-    \Log::debug(@$trace[2]["file"].":L".@$trace[2]["line"], true);
-    \Log::debug(@$trace[3]["file"].":L".@$trace[3]["line"], true);
-    \Log::debug("beginTransaction $this->transLevel");
+    Log::debug("beginTransaction $this->transLevel");
     
     if(!$this->nestable() || $this->transLevel == 0) {
       parent::beginTransaction();
@@ -78,7 +76,7 @@ class TransactionPDO extends \PDO {
 
   public function commit() {
     $this->transLevel--;
-    \Log::debug("commitTransaction $this->transLevel");
+    Log::debug("commitTransaction $this->transLevel");
     if(!$this->nestable() || $this->transLevel == 0) {
       parent::commit();
     } else {
@@ -89,7 +87,7 @@ class TransactionPDO extends \PDO {
   public function rollBack() {
     $this->transLevel--;
 
-    \Log::debug("rollbackTransaction $this->transLevel");
+    Log::debug("rollbackTransaction $this->transLevel");
     if(!$this->nestable() || $this->transLevel == 0) {
       parent::rollBack();
     } else {
