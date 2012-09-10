@@ -7,6 +7,7 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 use Rex\Data\Database;
 use Rex\Data\TransactionPDO;
+use PDO;
 
 class SymfonyBundle extends Bundle {
     public function build(ContainerBuilder $container)
