@@ -1,3 +1,4 @@
 {
-  name: 'rex'
+  'name': 'rex/rex',
+  'version': '0.1.dev'
 }
