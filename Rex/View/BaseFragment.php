@@ -3,6 +3,9 @@
 namespace Rex\View;
 
 class BaseFragment {
+  function __construct() {
+  }
+
 	static function currencyFormat($number, $currency = null) {
 		$formatted = number_format($number, 2);
 		if($currency) {

@@ -26,7 +26,7 @@ class SymfonyBundle extends Bundle {
 
       Database::setDB($db);
 
-      \Rex\Log::setLogger($this->get("logger"));
+      \Rex\Log::setLogger($this->container->get("logger"));
     }
 }
 

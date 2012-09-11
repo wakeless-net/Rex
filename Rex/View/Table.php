@@ -3,6 +3,7 @@
 namespace Rex\View;
 
 use Rex\Data\MySQLDataHandler;
+use Rex\Helper\FormHelper;
 
 class Table extends Tag {
   public $data;
@@ -36,8 +37,8 @@ class Table extends Tag {
   public $id = "";
 	
 	function __construct($display, $data = null) {
+    parent::__construct();
 		$this->addColumns($display);
-		parent::__construct();
 
     $this->name = get_class($this);
     if ($data != NULL){
@@ -290,7 +291,7 @@ class Table extends Tag {
 	
 	private function evalLink($row, $link) {
 	  if(is_string($link)) {
-  		extract($row->data);
+  		if($row && $row instanceof Rex\Data\DataObject) extract($row->data);
   		
   		$ret = eval('return "'.$link.'";');
       return $ret;
@@ -365,8 +366,8 @@ class Table extends Tag {
 		$tasks = "";
 		if($this->hasTasks()) {
 			ob_start();
-			FormHelper::dropDown("Task", $this->tasks);
-			FormHelper::submit("Go", "Go");
+			Fieldset::select("Task", "", array("options" => $this->tasks));
+			Fieldset::submit("Go", "Go");
 			$tasks = ob_get_contents();
 			ob_end_clean();
 		}

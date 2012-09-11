@@ -398,7 +398,7 @@ class DataObject extends BaseDataObject implements \ArrayAccess, ErrorStore {
 
   private $validations = [];
 	
-	function validate(\Validator $validator = null) {
+	function validate(Validator $validator = null) {
 	  $valid = true;
     
 	  if($validator) {
