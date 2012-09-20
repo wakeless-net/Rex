@@ -2,6 +2,8 @@
 
 namespace Rex\Data;
 
+use Rex\Log;
+
 interface ErrorStore {
 	function storeError($field, $error);
 	function clearErrors();
@@ -184,10 +186,10 @@ class DataObject extends BaseDataObject implements \ArrayAccess, ErrorStore {
 			if(get_class($handler) != "MySQLDataHandler") {
         $findBy = "find_by_".$this->getTable();
         if(is_null($foreignKey) && method_exists($handler, $findBy)) {
-          \Log::debug("$findBy(".$this[$primaryKey].")");
+          Log::debug("$findBy(".$this[$primaryKey].")");
           return $handler->$findBy($this[$primaryKey]);
         } else {
-          \Log::debug("filterOnColumn('$queryKey', {$this[$primaryKey]})");
+          Log::debug("filterOnColumn('$queryKey', {$this[$primaryKey]})");
           return $handler->filterOnColumn("$queryKey", $this[$primaryKey], $relation);
         }
 //				return $handler->filter(array($relation => "$table.$foreignKey = '?'"), $this->{"get$primaryKey"}());
@@ -383,7 +385,7 @@ class DataObject extends BaseDataObject implements \ArrayAccess, ErrorStore {
 		$this->clearErrors();
     
     if(!$this->validate($extraValidator)) {
-      \Log::info("Error validating: ".$this->__toString());
+      Log::info("Error validating: ".$this->__toString());
       return false;
     } else {
   		return $this;
@@ -423,7 +425,7 @@ class DataObject extends BaseDataObject implements \ArrayAccess, ErrorStore {
 
   private $validations = [];
 	
-	function validate(\Validator $validator = null) {
+	function validate(Validator $validator = null) {
 	  $valid = true;
     
 	  if($validator) {

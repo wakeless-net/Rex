@@ -1,40 +1,8 @@
 <?php
 
-
 namespace Rex\Data;
 
-use \PDO as PDO;
-
-class Database {
-	static private $db = null;
-	
-	/**
-	 * @return PDO
-	 */
-	static function getDB() {
-		if(self::$db) {
-			return self::$db;
-		} else {
-			global $database;
-			extract($database,EXTR_PREFIX_ALL,'');
-		
-			try {
-				self::$db = new TransactionPDO("mysql:dbname=$_Database;host=$_Server", $_Username, $_Password, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8" ));
-			} catch (PDOException $e) {
-				throw new MySQLException("Couldn't connect to database: ".$_Server.". Message: ".$e->getMessage());
-				return false;
-	  	}
-		
-			return self::$db;
-			
-		}
-	}
-  
-  static function setDB($db) {
-    self::$db = $db;
-  }
-	
-}
+use Rex\Log;
 
 class TransactionPDO extends \PDO {
   // Database drivers that support SAVEPOINTs.
@@ -49,7 +17,7 @@ class TransactionPDO extends \PDO {
   }
 
   function log($statement) {
-    \Log::debug(preg_replace('/(?>\r\n|\n|\r)+/m', ' ', $statement)."\n\r");
+    Log::debug(preg_replace('/(?>\r\n|\n|\r)+/m', ' ', $statement)."\n\r");
   }
   
   function exec($statement) {
@@ -80,7 +48,7 @@ class TransactionPDO extends \PDO {
     try {
       $ret = call_user_func($call);
     } catch(\Exception $e) {
-      \Log::debug($e);
+      Log::debug($e);
       $this->rollBack();
       throw $e;
     }
@@ -95,11 +63,7 @@ class TransactionPDO extends \PDO {
   }
 
   public function beginTransaction() {
-    $trace = debug_backtrace();
-    \Log::debug($trace[1]["file"].":L".$trace[1]["line"], true);
-    \Log::debug(@$trace[2]["file"].":L".@$trace[2]["line"], true);
-    \Log::debug(@$trace[3]["file"].":L".@$trace[3]["line"], true);
-    \Log::debug("beginTransaction $this->transLevel");
+    Log::debug("beginTransaction $this->transLevel");
     
     if(!$this->nestable() || $this->transLevel == 0) {
       parent::beginTransaction();
@@ -112,7 +76,7 @@ class TransactionPDO extends \PDO {
 
   public function commit() {
     $this->transLevel--;
-    \Log::debug("commitTransaction $this->transLevel");
+    Log::debug("commitTransaction $this->transLevel");
     if(!$this->nestable() || $this->transLevel == 0) {
       parent::commit();
     } else {
@@ -123,7 +87,7 @@ class TransactionPDO extends \PDO {
   public function rollBack() {
     $this->transLevel--;
 
-    \Log::debug("rollbackTransaction $this->transLevel");
+    Log::debug("rollbackTransaction $this->transLevel");
     if(!$this->nestable() || $this->transLevel == 0) {
       parent::rollBack();
     } else {
@@ -145,40 +109,6 @@ class TransactionPDO extends \PDO {
       }
     }
     return $fields;
-  }
-}
-
-class Database_FieldSet extends Result {
-  function add($field, $table = "") {
-    $type = "";
-    $length = "";
-    if(isset($field["Type"])) {
-      if(preg_match('/(\w+)\((\d+)\)/', $field["Type"], $typeSplit)) {
-        $type = $typeSplit[1];
-        $length = $typeSplit[2];
-      } else { 
-        $type = $field["Type"];
-      }
-    }
-    
-    if(!isset($field["FullName"])) {
-      $fullName = ($table) ? "$table.".$field["Field"] : $field["Field"];
-    } else {
-      $fullName = $field["FullName"];
-    }
-    
-    
-    $this->append(array(
-    	"FullName" => $fullName,
-      "Table" => $table,
-      "Field" => $field["Field"],
-      "Type" => $type,
-      "Length" => $length,
-    ));
-  }
-  
-  function Fields() {
-    return $this->toArray("Field", "Field");
   }
 }
 

@@ -1,4 +1,11 @@
 {
   "name": "rex/rex",
-  "version": "0.1.dev"
+  "version": "0.1.dev",
+
+  "autoload": {
+    "psr-0": {
+      "Rex": ""
+    }
+  }
+
 }
