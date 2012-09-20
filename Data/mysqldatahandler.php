@@ -5,7 +5,6 @@ namespace Rex\Data;
 class UniquenessException extends \PDOException {}
 
 class MySQLDataHandler implements \IteratorAggregate, \Countable, \ArrayAccess {
-	
 	static $profile = array();
 	
 	var $lastTotal = 0;
@@ -31,10 +30,15 @@ class MySQLDataHandler implements \IteratorAggregate, \Countable, \ArrayAccess {
 		
 		if($type) {
 			$this->type = $type;
-		} else {
+		} elseif(!$this->type) {
 			$this->type = $table;
 		}
 	}
+
+  static function id() {
+    $type = $this->type;
+    return $type::primaryKey();
+  }
 	
 	function klone() {
 		return clone $this;
@@ -496,7 +500,8 @@ class MySQLDataHandler implements \IteratorAggregate, \Countable, \ArrayAccess {
 		
 		if($queryResult) while($row = $queryResult->fetch(\PDO::FETCH_ASSOC)) {
 
-			if(!class_exists($type)) $type = "Item";
+			if(!class_exists($type))
+      throw new \Exception("$type doesn't exist.");
 			$this->result[] = new $type($row);
 		}
 		return $this->result;
@@ -887,7 +892,7 @@ class MySQLDataHandler implements \IteratorAggregate, \Countable, \ArrayAccess {
 	  }
 	  
 		$handler = clone $this;
-		$ret = $handler->filterOnColumn($this->from.".ID", $id);
+		$ret = $handler->filterOnColumn($this->from.".".static::$id, $id);
 		if(!is_array($id) && count($ret) == 1) {
 			return $ret->first();
 		} else if(!is_array($id) && count($ret) == 0){
@@ -905,7 +910,7 @@ class MySQLDataHandler implements \IteratorAggregate, \Countable, \ArrayAccess {
 		if(in_array($function, array("max", "min", "sum"))) {
 			return $this->aggregate($function, $args[0]);
 		} else {
-			throw new Exception("Method ".get_class($this)."::$function is not found.");
+			throw new \Exception("Method ".get_class($this)."::$function is not found.");
 		}
 	}
     

@@ -34,7 +34,7 @@ class BaseDataObject {
       $class = substr($name, 3);
       return ($this instanceof $class);
     } else {
-      throw new Exception(get_class($this)."::$name not found.");
+      throw new \Exception(get_class($this)."::$name not found.");
     }
   }
   
@@ -63,6 +63,9 @@ class BaseDataObject {
 //	}
 }
 class DataObject extends BaseDataObject implements \ArrayAccess, ErrorStore {
+
+  static $primaryKey = "ID";
+
 	protected $has_many = array();
 	protected $has_one = array();
 	
@@ -85,6 +88,25 @@ class DataObject extends BaseDataObject implements \ArrayAccess, ErrorStore {
 		$this->oldData = $this->data;
 		$this->errors = new ErrorArray;
 	}
+
+  static function primaryKey() {
+    return static::$primaryKey;
+  }
+
+  function getID() {
+    if(static::primaryKey() == "ID") parent::getID();
+    else {
+      return $this[static::primaryKey()];
+    }
+  }
+
+  function setID($id) {
+    if(static::primaryKey() == "ID") {
+      parent::setID($id);
+    } else {
+      $this[static::primaryKey()] = $id;
+    }
+  }
 	
 	static function VirtualFields() {
 	  $ref = new \ReflectionClass(get_called_class());
@@ -125,15 +147,20 @@ class DataObject extends BaseDataObject implements \ArrayAccess, ErrorStore {
 			
 			$rel = $this->has_many[$relation];
 			
-			$primaryKey = isset($rel["primaryKey"]) ? $rel["primaryKey"] : "ID";
+			$primaryKey = isset($rel["primaryKey"]) ? $rel["primaryKey"] : static::primaryKey();
 			$table = isset($rel["table"]) ? $rel["table"] : $relation;
 			$foreignKey = isset($rel["foreignKey"]) ? $rel["foreignKey"] : null; 
 			$class = isset($rel["class"]) ? $rel["class"] : $table;
 			$conditions = isset($rel["conditions"]) ? $rel["conditions"] : array();
 			$order = isset($rel["orderBy"]) ? $rel["orderBy"] : null;
 			
-			$collectionClass = class_exists($class."Collection") ? $class."Collection" : "Rex\Data\MySQLDataHandler";
-			$handler = new $collectionClass($table, $class);
+      $collectionClass = $class."Collection";
+      if(class_exists($collectionClass)) {
+        $handler = new $collectionClass;
+      } else {
+        $collectionClass = 'Rex\Data\MySQLDataHandler';
+        $handler = new $collectionClass($table, $class);
+      }
 			
 			foreach($conditions as $column => $value) {
 				$handler = $handler->filterOnColumn($column, $value);
@@ -420,7 +447,7 @@ class DataObject extends BaseDataObject implements \ArrayAccess, ErrorStore {
   }
 	
 	function Validator() {
-		return new \Validator(array());
+		return new Validator(array());
 	}
 
 
@@ -469,7 +496,7 @@ class DataObject extends BaseDataObject implements \ArrayAccess, ErrorStore {
 	function afterUpdate() {}
 	
 	protected function getMySQLDataHandler() {
-		return \HandlerFactory::generate('Rex\Data\MySQLDataHandler', $this->getTable());
+    return new MySQLDataHandler($this->getTable());
 	}
 	
 	protected function doSave($fields) {
@@ -491,7 +518,7 @@ class DataObject extends BaseDataObject implements \ArrayAccess, ErrorStore {
 	
 	function forceSave($fields = null, $skipTimestamps = false) {
 		if(is_null($fields)) $fields = $this->fields;
-		if(empty($fields)) { throw new Exception("The \$fields array is empty in the ".get_class($this)." class."); }
+		if(empty($fields)) { throw new \Exception("The \$fields array is empty in the ".get_class($this)." class."); }
 		$new = $this->isNew();
 		
 		if(!$skipTimestamps) $this->updateTimestamps();
@@ -514,7 +541,7 @@ class DataObject extends BaseDataObject implements \ArrayAccess, ErrorStore {
           $this->afterUpdate();
         }
       } catch(\Exception $e) {
-        if($new) $this["ID"] = null;
+        if($new) $this[static::id()] = null;
         throw $e;
       }
         
